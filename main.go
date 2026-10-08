@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
@@ -17,10 +18,18 @@ func main() {
 	fmt.Println("API: ", apiFormat)
 
 	resp, err := http.Get(apiFormat)
-
 	if err != nil {
 		fmt.Println("Error occured while doing GET request", err)
 		return
 	}
-	fmt.Println("Http status: ", resp.StatusCode, "ok")
+	defer resp.Body.Close()
+	fmt.Println("Http status: ", resp.Status)
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error while reading the data.", err)
+		return
+	}
+	fmt.Println("Data: ", string(data))
+
 }
