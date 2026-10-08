@@ -1,0 +1,13 @@
+
+# Compiled binaries
+github-user-activity.exe
+github-user-activity
+
+# Environment and editor files
+.env
+.vscode/
+.idea/
+
+# Test artifacts
+*.test
+coverage.out
