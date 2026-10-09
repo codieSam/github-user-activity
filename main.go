@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 type Event struct {
@@ -24,17 +26,29 @@ func main() {
 		fmt.Println("Please provide the github username")
 		return
 	}
-	githubUsername := os.Args[1]
+	githubUsername := strings.TrimSpace(os.Args[1])
+	if githubUsername == "" {
+		fmt.Println("Please provide a valid GitHub Username.")
+		return
+	}
 	apiFormat := "https://api.github.com/users/" + githubUsername + "/events"
 	fmt.Println("GitHub Username: ", githubUsername)
 	fmt.Println("API: ", apiFormat)
 
-	resp, err := http.Get(apiFormat)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Get(apiFormat)
 	if err != nil {
 		fmt.Println("Error occured while doing GET request", err)
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Error: GitHub API returned.", resp.Status)
+		return
+	}
 	fmt.Println("Http status: ", resp.Status)
 
 	data, err := io.ReadAll(resp.Body)
@@ -56,11 +70,20 @@ func main() {
 		Repo := events[i].Repo.Name
 		CreatedAt := events[i].CreatedAt
 
+		parsedTime, err := time.Parse(time.RFC3339, CreatedAt)
+
+		if err != nil {
+			fmt.Println("Error: while pasrsing the time for createdAt.", err)
+			return
+		}
+
+		createdTime := parsedTime.Format("02 Jan 2006, 15:04 MST")
+
 		switch Type {
 		case "PushEvent":
-			fmt.Println("Pushed commits to", Repo, "on", CreatedAt)
+			fmt.Println("Pushed commits to", Repo, "on", createdTime)
 		case "CreateEvent":
-			fmt.Println("Created an event in", Repo, "on", CreatedAt)
+			fmt.Println("Created an event in", Repo, "on", createdTime)
 		default:
 			fmt.Println("Activity:", Type, "in", Repo)
 		}
