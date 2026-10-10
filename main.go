@@ -27,6 +27,7 @@ func main() {
 		return
 	}
 	githubUsername := strings.TrimSpace(os.Args[1])
+
 	if githubUsername == "" {
 		fmt.Println("Please provide a valid GitHub Username.")
 		return
@@ -65,6 +66,10 @@ func main() {
 	}
 	fmt.Println("Decoded Successfully: ", len(events), "events.")
 	fmt.Println("Recent github activity for ", githubUsername)
+	var eventType string
+	if len(os.Args) >= 3 {
+		eventType = os.Args[2]
+	}
 	for i := range events {
 		Type := events[i].Type
 		Repo := events[i].Repo.Name
@@ -79,6 +84,9 @@ func main() {
 
 		createdTime := parsedTime.Format("02 Jan 2006, 15:04 MST")
 
+		if eventType != "" && eventType != Type {
+			continue
+		}
 		switch Type {
 		case "PushEvent":
 			fmt.Println("Pushed commits to", Repo, "on", createdTime)
