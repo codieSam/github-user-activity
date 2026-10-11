@@ -20,6 +20,18 @@ type Repository struct {
 	Name string `json:"name"`
 }
 
+func normalizeEventType(eventType string) string {
+	etype := strings.ToLower(eventType)
+	switch etype {
+	case "push":
+		eventType = "PushEvent"
+	case "create":
+		eventType = "CreateEvent"
+	}
+	return eventType
+
+}
+
 func main() {
 
 	if len(os.Args) < 2 {
@@ -67,9 +79,11 @@ func main() {
 	fmt.Println("Decoded Successfully: ", len(events), "events.")
 	fmt.Println("Recent github activity for ", githubUsername)
 	var eventType string
+
 	if len(os.Args) >= 3 {
-		eventType = os.Args[2]
+		eventType = normalizeEventType(os.Args[2])
 	}
+	eventCounter := 0
 	for i := range events {
 		Type := events[i].Type
 		Repo := events[i].Repo.Name
@@ -84,9 +98,11 @@ func main() {
 
 		createdTime := parsedTime.Format("02 Jan 2006, 15:04 MST")
 
-		if eventType != "" && eventType != Type {
+		if eventType != "" && !strings.EqualFold(eventType, Type) {
 			continue
 		}
+		eventCounter++
+
 		switch Type {
 		case "PushEvent":
 			fmt.Println("Pushed commits to", Repo, "on", createdTime)
@@ -99,6 +115,9 @@ func main() {
 		// fmt.Println("Type: ", Type)
 		// fmt.Println("Repo: ", Repo)
 		// fmt.Println("CreatedAt: ", CreatedAt)
+	}
+	if eventCounter == 0 {
+		fmt.Println("No such event found.")
 	}
 
 }
